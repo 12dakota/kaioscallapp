@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "name": "kaitroot",
+  "description": "Root & utility tools for KaiOS",
+  "launch_path": "/index.html",
+  "type": "web",
+  "icons": {
+    "56": "/img/icon-56.png",
+    "112": "/img/icon-112.png"
+  },
+  "developer": {
+    "name": "tsd tools",
+    "url": "https://example.com"
+  },
+  "origin": "app://kaitroot.delta-applications.net",
+  "permissions": {
+    "engmode-extension": {
+      "description": "Handle KaiOS 2.5.1+ devices"
+    },
+    "kaiosextension": {
+      "description": "Handle KaiOS 2.5 devices"
+    },
+    "jrdextension": {
+      "description": "Handle KaiOS 1.0 devices by TCL"
+    },
+    "power": {
+      "description": "Enable privileged factory reset capability"
+    },
+    "settings": {
+      "access": "readwrite",
+      "description": "Enable hidden settings modification"
+    },
+    "device-storage:apps": {
+      "access": "readwrite",
+      "description": "Support package installation"
+    },
+    "webapps-manage": {
+      "description": "Support package installation"
+    }
+  },
+  "theme_color": "#006400",
+  "cursor": "false",
+  "default_locale": "en-US",
+  "locales": {
+    "en-US": {
+      "name": "kaitroot",
+      "description": "Root & utility tools for KaiOS"
+    },
+    "es": {
+      "name": "kaitroot",
+      "description": "Herramientas root y utilidades para KaiOS"
+    },
+    "fr": {
+      "name": "kaitroot",
+      "description": "Outils root et utilitaires pour KaiOS"
+    }
+  }
+}
