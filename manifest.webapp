@@ -1,18 +1,21 @@
 {
   "version": "1.0.0",
-  "name": "kaitroot",
-  "description": "Root & utility tools for KaiOS",
-  "launch_path": "/index.html",
+  "name": "tsd tool",
+  "description": "An ultimate KaiOS dexter tool",
+  "launch_path": "/",
   "type": "web",
   "icons": {
-    "56": "/img/icon-56.png",
-    "112": "/img/icon-112.png"
+    "56": "https://kairoot.thescholarsden.net/img/icon-56.png",
+    "112": "https://kairoot.thescholarsden.net/img/icon-112.png"
   },
   "developer": {
-    "name": "tsd tools",
-    "url": "https://example.com"
+    "name": "The Scholars Den",
+    "url": "https://thescholarsden.net"
   },
-  "origin": "app://kaitroot.delta-applications.net",
+  "origin": "https://kairoot.thescholarsden.net",
+  "installs_allowed_from": [
+    "*"
+  ],
   "permissions": {
     "engmode-extension": {
       "description": "Handle KaiOS 2.5.1+ devices"
@@ -38,21 +41,21 @@
       "description": "Support package installation"
     }
   },
-  "theme_color": "#006400",
+  "theme_color": "#00A859",
   "cursor": "false",
   "default_locale": "en-US",
   "locales": {
     "en-US": {
-      "name": "kaitroot",
-      "description": "Root & utility tools for KaiOS"
+      "name": "tsd tool",
+      "description": "An ultimate KaiOS dexter tool"
     },
     "es": {
-      "name": "kaitroot",
-      "description": "Herramientas root y utilidades para KaiOS"
+      "name": "Herramienta tsd",
+      "description": "Una herramienta definitiva para KaiOS"
     },
     "fr": {
-      "name": "kaitroot",
-      "description": "Outils root et utilitaires pour KaiOS"
+      "name": "Outil tsd",
+      "description": "Un outil suprême pour KaiOS"
     }
   }
 }
