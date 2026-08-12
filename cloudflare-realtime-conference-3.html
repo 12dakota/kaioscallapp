@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cloudflare Realtime Conference</title>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/8.1.2/adapter.min.js"
+    integrity="sha512-l40eBFtXx+ve5RryIELC3y6/OM6Nu89mLGQd7fg1C93tN6XrkC3supb+/YiD/Y+B8P37kdJjtG1MT1kOO2VzxA=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --panel: #121826;
+      --panel-2: #1a2234;
+      --border: #2a3548;
+      --text: #e8eef8;
+      --muted: #8b9bb4;
+      --accent: #f6821f;
+      --accent-dim: #3a2410;
+      --danger: #ef4444;
+      --ok: #22c55e;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background:
+        radial-gradient(900px 500px at 0% 0%, #1c2a44 0%, transparent 55%),
+        radial-gradient(700px 400px at 100% 0%, #2a1808 0%, transparent 50%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      padding: 16px;
+    }
+
+    .shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--accent), #e05a00);
+      font-size: 1.25rem;
+      box-shadow: 0 6px 18px rgba(246, 130, 31, 0.35);
+    }
+
+    h1 { font-size: 1.15rem; font-weight: 650; }
+    .sub { font-size: 0.8rem; color: var(--muted); }
+
+    .badge {
+      font-size: 0.75rem;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: var(--panel-2);
+    }
+    .badge.live { color: var(--ok); border-color: #14532d; background: #052e16; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    .stage {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      min-height: 420px;
+    }
+
+    .videos {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    .tile {
+      position: relative;
+      background: #0a0e16;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      aspect-ratio: 16 / 10;
+    }
+
+    .tile video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #000;
+      display: block;
+    }
+
+    .tile .label {
+      position: absolute;
+      left: 8px;
+      bottom: 8px;
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(6px);
+    }
+
+    .tile.local .label { border: 1px solid rgba(246, 130, 31, 0.5); }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+
+    .card h2 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    input, textarea, button, select {
+      font: inherit;
+    }
+
+    input, textarea {
+      width: 100%;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(246, 130, 31, 0.15);
+    }
+
+    textarea {
+      min-height: 88px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 600;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, var(--accent), #e05a00);
+      color: #111;
+      border: none;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    button.danger {
+      background: #3f1212;
+      border-color: #7f1d1d;
+      color: #fecaca;
+    }
+
+    button.ghost {
+      background: transparent;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .log {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      max-height: 160px;
+      overflow: auto;
+      white-space: pre-wrap;
+      background: #0a0e16;
+      border-radius: 10px;
+      padding: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .warn {
+      font-size: 0.75rem;
+      color: #fbbf24;
+      background: #2a1f08;
+      border: 1px solid #78350f;
+      border-radius: 10px;
+      padding: 10px;
+      line-height: 1.4;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .participant-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.85rem;
+    }
+
+    .participant-list div {
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand">
+        <div class="logo">📡</div>
+        <div>
+          <h1>Cloudflare Realtime Conference</h1>
+          <div class="sub">Multi-person SFU · Sessions &amp; Tracks</div>
+        </div>
+      </div>
+      <div id="statusBadge" class="badge">Idle</div>
+    </header>
+
+    <div class="layout">
+      <section class="stage">
+        <div class="videos" id="videos">
+          <div class="empty" id="emptyState">
+            Join a room to start. Grant camera/mic, then share your invite with others.
+          </div>
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <div class="card">
+          <h2>Room</h2>
+          <label for="displayName">Your name</label>
+          <input id="displayName" placeholder="Alex" value="Guest" />
+
+          <div style="height: 10px"></div>
+          <label for="roomId">Room ID</label>
+          <input id="roomId" placeholder="team-standup" />
+
+          <div class="row">
+            <button class="primary" id="btnJoin">Join conference</button>
+            <button class="danger" id="btnLeave" disabled>Leave</button>
+          </div>
+
+          <div class="row controls" style="margin-top: 12px">
+            <button id="btnMute" disabled>Mute mic</button>
+            <button id="btnCam" disabled>Stop camera</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Share your invite</h2>
+          <p class="sub" style="margin-bottom: 8px">
+            Copy this and send it to others in the room. They paste it under “Add peer”.
+          </p>
+          <textarea id="myInvite" readonly placeholder="Join the room first…"></textarea>
+          <div class="row">
+            <button id="btnCopyInvite" disabled>Copy invite</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Add peer</h2>
+          <p class="sub" style="margin-bottom: 8px">
+            Paste another person’s invite JSON to pull their audio/video via the SFU.
+          </p>
+          <textarea id="peerInvite" placeholder='{"name":"…","sessionId":"…","tracks":[…]}'></textarea>
+          <div class="row">
+            <button class="primary" id="btnAddPeer" disabled>Subscribe to peer</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Participants</h2>
+          <div class="participant-list" id="participantList">
+            <div class="empty" style="padding: 8px">No one connected yet</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Log</h2>
+          <div class="log" id="log"></div>
+        </div>
+
+        <div class="warn">
+          <strong>Demo only.</strong> App secret is embedded in the page for this sample.
+          Never ship production Realtime credentials in browser code — proxy API calls through your backend.
+          <br /><br />
+          <strong>If you see “Permission denied”:</strong> that is almost always the browser
+          blocking camera/mic. Serve this file over <code>http://localhost</code> (not
+          <code>file://</code>), then allow camera &amp; microphone when prompted.
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script type="module">
+    // ── Credentials from the provided Realtime echo demo ──────────────────
+    // DO NOT use secrets in the browser for production.
+    const appId = "62b3d9b013e9a591cedeec65d84587b6";
+    const appSecret = "87747872ea29eddbf9509fe69728c715e80fbc14bc916874a34f55ab984fe18a";
+
+    // ── Realtime API helper (from Cloudflare sample structure) ────────────
+    class RealtimeApp {
+      constructor(appId, basePath = "https://rtc.live.cloudflare.com/v1") {
+        this.prefixPath = `${basePath}/apps/${appId}`;
+        this.sessionId = null;
+      }
+
+      async sendRequest(url, body, method = "POST") {
+        const request = {
+          method,
+          mode: "cors",
+          headers: {
+            "content-type": "application/json",
+            Authorization: `Bearer ${appSecret}`,
+          },
+          body: body == null ? undefined : JSON.stringify(body),
+        };
+        const response = await fetch(url, request);
+        const result = await response.json();
+        return result;
+      }
+
+      checkErrors(result, tracksCount = 0) {
+        if (result.errorCode) {
+          throw new Error(result.errorDescription || result.errorCode);
+        }
+        if (result.tracks) {
+          for (let i = 0; i < Math.min(tracksCount, result.tracks.length); i++) {
+            if (result.tracks[i]?.errorCode) {
+              throw new Error(
+                `tracks[${i}]: ${result.tracks[i].errorDescription || result.tracks[i].errorCode}`
+              );
+            }
+          }
+        }
+      }
+
+      async newSession(offerSDP) {
+        const url = `${this.prefixPath}/sessions/new`;
+        const body = {
+          sessionDescription: { type: "offer", sdp: offerSDP },
+        };
+        const result = await this.sendRequest(url, body);
+        this.checkErrors(result);
+        this.sessionId = result.sessionId;
+        return result;
+      }
+
+      async newTracks(trackObjects, offerSDP = null) {
+        const url = `${this.prefixPath}/sessions/${this.sessionId}/tracks/new`;
+        const body = { tracks: trackObjects };
+        if (offerSDP) {
+          body.sessionDescription = { type: "offer", sdp: offerSDP };
+        }
+        const result = await this.sendRequest(url, body);
+        this.checkErrors(result, trackObjects.length);
+        return result;
+      }
+
+      async sendAnswerSDP(answer) {
+        const url = `${this.prefixPath}/sessions/${this.sessionId}/renegotiate`;
+        const body = {
+          sessionDescription: { type: "answer", sdp: answer },
+        };
+        const result = await this.sendRequest(url, body, "PUT");
+        this.checkErrors(result);
+        return result;
+      }
+    }
+
+    // ── UI helpers ────────────────────────────────────────────────────────
+    const $ = (id) => document.getElementById(id);
+    const logEl = $("log");
+    const videosEl = $("videos");
+    const emptyState = $("emptyState");
+    const statusBadge = $("statusBadge");
+    const participantList = $("participantList");
+
+    function log(msg) {
+      const t = new Date().toLocaleTimeString();
+      logEl.textContent += `[${t}] ${msg}\n`;
+      logEl.scrollTop = logEl.scrollHeight;
+      console.log(msg);
+    }
+
+    function setStatus(text, live = false) {
+      statusBadge.textContent = text;
+      statusBadge.classList.toggle("live", live);
+    }
+
+    function ensureStage() {
+      emptyState?.remove();
+    }
+
+    function addVideoTile(id, label, stream, isLocal = false) {
+      ensureStage();
+      let tile = document.getElementById(`tile-${id}`);
+      if (!tile) {
+        tile = document.createElement("div");
+        tile.className = `tile${isLocal ? " local" : ""}`;
+        tile.id = `tile-${id}`;
+        tile.innerHTML = `<video autoplay playsinline ${isLocal ? "muted" : ""}></video><div class="label"></div>`;
+        videosEl.appendChild(tile);
+      }
+      const video = tile.querySelector("video");
+      const labelEl = tile.querySelector(".label");
+      labelEl.textContent = label + (isLocal ? " (you)" : "");
+      if (video.srcObject !== stream) {
+        video.srcObject = stream;
+      }
+      return tile;
+    }
+
+    function removeVideoTile(id) {
+      document.getElementById(`tile-${id}`)?.remove();
+      if (!videosEl.querySelector(".tile")) {
+        videosEl.innerHTML =
+          '<div class="empty" id="emptyState">Join a room to start. Grant camera/mic, then share your invite with others.</div>';
+      }
+    }
+
+    function refreshParticipantList() {
+      const items = [];
+      if (state.localName) {
+        items.push(`<div><span>${escapeHtml(state.localName)}</span><span>local</span></div>`);
+      }
+      for (const [id, p] of state.peers) {
+        items.push(
+          `<div><span>${escapeHtml(p.name || id.slice(0, 8))}</span><span>remote</span></div>`
+        );
+      }
+      participantList.innerHTML = items.length
+        ? items.join("")
+        : '<div class="empty" style="padding:8px">No one connected yet</div>';
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    // ── Conference state ──────────────────────────────────────────────────
+    const state = {
+      app: null,
+      pc: null,
+      localStream: null,
+      localTracks: [], // { mid, trackName, kind }
+      localName: "",
+      roomId: "",
+      peers: new Map(), // key -> { name, sessionId, tracks, stream }
+      joined: false,
+      micEnabled: true,
+      camEnabled: true,
+    };
+
+    // Pre-fill room from URL
+    const params = new URLSearchParams(location.search);
+    if (params.get("room")) $("roomId").value = params.get("room");
+    if (params.get("name")) $("displayName").value = params.get("name");
+
+    async function waitIceConnected(pc, timeoutMs = 15000) {
+      if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
+        return;
+      }
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("ICE connect timeout")), timeoutMs);
+        const onChange = () => {
+          const s = pc.iceConnectionState;
+          if (s === "connected" || s === "completed") {
+            clearTimeout(timer);
+            pc.removeEventListener("iceconnectionstatechange", onChange);
+            resolve();
+          } else if (s === "failed") {
+            clearTimeout(timer);
+            pc.removeEventListener("iceconnectionstatechange", onChange);
+            reject(new Error("ICE connection failed"));
+          }
+        };
+        pc.addEventListener("iceconnectionstatechange", onChange);
+      });
+    }
+
+    async function join() {
+      if (state.joined) return;
+
+      const name = ($("displayName").value || "Guest").trim();
+      const room = ($("roomId").value || "lobby").trim().toLowerCase().replace(/\s+/g, "-");
+      $("roomId").value = room;
+
+      try {
+        // Camera/mic only works on HTTPS or http://localhost (not file://)
+        if (location.protocol === "file:") {
+          throw new Error(
+            "Open this page over http://localhost (not as a file). " +
+              "Browsers block camera/microphone on file:// pages."
+          );
+        }
+        if (!window.isSecureContext && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
+          throw new Error(
+            "Camera/microphone require a secure context (HTTPS or localhost)."
+          );
+        }
+        if (!navigator.mediaDevices?.getUserMedia) {
+          throw new Error("This browser does not support getUserMedia.");
+        }
+
+        setStatus("Requesting media…");
+        log("Requesting camera & microphone");
+
+        state.localStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+        });
+
+        state.localName = name;
+        state.roomId = room;
+
+        // PeerConnection to Cloudflare Realtime SFU
+        state.pc = new RTCPeerConnection({
+          iceServers: [{ urls: "stun:stun.cloudflare.com:3478" }],
+          bundlePolicy: "max-bundle",
+        });
+
+        state.pc.onconnectionstatechange = () => {
+          log(`PC state: ${state.pc.connectionState}`);
+        };
+
+        // Collect remote tracks into peer streams as they arrive
+        state.pc.ontrack = (event) => {
+          log(`Remote track received mid=${event.track.mid} kind=${event.track.kind}`);
+          // Tracks are attached to peer streams when we subscribe (see subscribePeer)
+        };
+
+        const transceivers = state.localStream.getTracks().map((track) =>
+          state.pc.addTransceiver(track, { direction: "sendonly" })
+        );
+
+        state.app = new RealtimeApp(appId);
+
+        // 1) Create session
+        setStatus("Creating session…");
+        await state.pc.setLocalDescription(await state.pc.createOffer());
+        const sessionResult = await state.app.newSession(state.pc.localDescription.sdp);
+        await state.pc.setRemoteDescription(
+          new RTCSessionDescription(sessionResult.sessionDescription)
+        );
+        log(`Session created: ${state.app.sessionId}`);
+
+        await waitIceConnected(state.pc);
+        log("ICE connected to Cloudflare Realtime");
+
+        // 2) Publish local tracks
+        setStatus("Publishing tracks…");
+        let trackObjects = transceivers.map((t) => ({
+          location: "local",
+          mid: t.mid,
+          trackName: t.sender.track.id,
+        }));
+
+        await state.pc.setLocalDescription(await state.pc.createOffer());
+        const publishResult = await state.app.newTracks(
+          trackObjects,
+          state.pc.localDescription.sdp
+        );
+        if (publishResult.sessionDescription) {
+          await state.pc.setRemoteDescription(
+            new RTCSessionDescription(publishResult.sessionDescription)
+          );
+        }
+
+        state.localTracks = transceivers.map((t) => ({
+          mid: t.mid,
+          trackName: t.sender.track.id,
+          kind: t.sender.track.kind,
+        }));
+
+        log(
+          `Published tracks: ${state.localTracks.map((t) => t.kind + ":" + t.trackName.slice(0, 8)).join(", ")}`
+        );
+
+        // Local preview
+        addVideoTile("local", name, state.localStream, true);
+
+        // Build shareable invite
+        const invite = {
+          v: 1,
+          room,
+          name,
+          sessionId: state.app.sessionId,
+          tracks: state.localTracks.map((t) => ({
+            trackName: t.trackName,
+            kind: t.kind,
+          })),
+        };
+        $("myInvite").value = JSON.stringify(invite, null, 2);
+
+        // Update URL for easy sharing of room id
+        const url = new URL(location.href);
+        url.searchParams.set("room", room);
+        url.searchParams.set("name", name);
+        history.replaceState(null, "", url);
+
+        state.joined = true;
+        $("btnJoin").disabled = true;
+        $("btnLeave").disabled = false;
+        $("btnMute").disabled = false;
+        $("btnCam").disabled = false;
+        $("btnCopyInvite").disabled = false;
+        $("btnAddPeer").disabled = false;
+        setStatus(`In room: ${room}`, true);
+        refreshParticipantList();
+        log("Joined conference — share your invite with peers");
+      } catch (err) {
+        console.error(err);
+        const name = err?.name || "";
+        const msg = err?.message || String(err);
+        let help = msg;
+
+        if (name === "NotAllowedError" || /permission denied|notallowed/i.test(msg)) {
+          help =
+            "Camera/microphone permission denied.\n\n" +
+            "• Click the lock/camera icon in the address bar and allow access\n" +
+            "• Or check System Settings → Privacy → Camera & Microphone\n" +
+            "• Do not open the HTML as a local file — serve it via localhost instead";
+        } else if (name === "NotFoundError") {
+          help = "No camera or microphone found. Plug one in and try again.";
+        } else if (name === "NotReadableError") {
+          help = "Camera/mic is already in use by another app. Close it and retry.";
+        } else if (/file:\/\//i.test(msg) || /localhost/i.test(msg)) {
+          help = msg;
+        }
+
+        log(`Error: ${name || "Error"} — ${msg}`);
+        setStatus("Permission / join error");
+        await leave();
+        alert(help);
+      }
+    }
+
+    async function subscribePeer(invite) {
+      if (!state.joined || !state.app?.sessionId) {
+        throw new Error("Join the conference first");
+      }
+      if (!invite?.sessionId || !Array.isArray(invite.tracks) || !invite.tracks.length) {
+        throw new Error("Invalid invite — need sessionId and tracks");
+      }
+      if (invite.sessionId === state.app.sessionId) {
+        throw new Error("That invite is your own session");
+      }
+      if (invite.room && state.roomId && invite.room !== state.roomId) {
+        log(`Warning: invite room "${invite.room}" differs from yours "${state.roomId}"`);
+      }
+
+      const peerKey = invite.sessionId;
+      if (state.peers.has(peerKey)) {
+        log(`Already subscribed to ${invite.name || peerKey.slice(0, 8)}`);
+        return;
+      }
+
+      setStatus("Subscribing to peer…");
+      log(`Pulling tracks from ${invite.name || "peer"} (${peerKey.slice(0, 8)}…)`);
+
+      const trackObjects = invite.tracks.map((t) => ({
+        location: "remote",
+        sessionId: invite.sessionId,
+        trackName: t.trackName,
+      }));
+
+      // Prepare to receive tracks
+      const expected = trackObjects.length;
+      const received = [];
+      const trackWait = new Promise((resolve) => {
+        const handler = (event) => {
+          received.push(event.track);
+          log(`Got remote track kind=${event.track.kind} id=${event.track.id.slice(0, 8)}`);
+          if (received.length >= expected) {
+            state.pc.removeEventListener("track", handler);
+            resolve(received);
+          }
+        };
+        state.pc.addEventListener("track", handler);
+        // Safety timeout resolve with whatever we have
+        setTimeout(() => {
+          state.pc.removeEventListener("track", handler);
+          resolve(received);
+        }, 12000);
+      });
+
+      const pullResult = await state.app.newTracks(trackObjects);
+
+      if (pullResult.requiresImmediateRenegotiation && pullResult.sessionDescription) {
+        if (pullResult.sessionDescription.type === "offer") {
+          await state.pc.setRemoteDescription(
+            new RTCSessionDescription(pullResult.sessionDescription)
+          );
+          await state.pc.setLocalDescription(await state.pc.createAnswer());
+          await state.app.sendAnswerSDP(state.pc.localDescription.sdp);
+        } else if (pullResult.sessionDescription.type === "answer") {
+          await state.pc.setRemoteDescription(
+            new RTCSessionDescription(pullResult.sessionDescription)
+          );
+        }
+      } else if (pullResult.sessionDescription) {
+        await state.pc.setRemoteDescription(
+          new RTCSessionDescription(pullResult.sessionDescription)
+        );
+      }
+
+      const tracks = await trackWait;
+      const remoteStream = new MediaStream();
+      for (const t of tracks) remoteStream.addTrack(t);
+
+      // If ontrack didn't fire in time, try tracks from transceiver receivers
+      if (remoteStream.getTracks().length === 0) {
+        for (const receiver of state.pc.getReceivers()) {
+          if (receiver.track && receiver.track.readyState !== "ended") {
+            // Heuristic: only add recently pulled — may include extras in busy conf
+            remoteStream.addTrack(receiver.track);
+          }
+        }
+      }
+
+      state.peers.set(peerKey, {
+        name: invite.name || "Peer",
+        sessionId: invite.sessionId,
+        tracks: invite.tracks,
+        stream: remoteStream,
+      });
+
+      addVideoTile(peerKey, invite.name || "Peer", remoteStream, false);
+      refreshParticipantList();
+      setStatus(`In room: ${state.roomId}`, true);
+      log(`Subscribed to ${invite.name || peerKey.slice(0, 8)} (${tracks.length} tracks)`);
+    }
+
+    async function leave() {
+      try {
+        state.localStream?.getTracks().forEach((t) => t.stop());
+        state.pc?.close();
+      } catch (_) {}
+
+      state.localStream = null;
+      state.pc = null;
+      state.app = null;
+      state.localTracks = [];
+      state.peers.clear();
+      state.joined = false;
+      state.micEnabled = true;
+      state.camEnabled = true;
+
+      videosEl.innerHTML =
+        '<div class="empty" id="emptyState">Join a room to start. Grant camera/mic, then share your invite with others.</div>';
+      $("myInvite").value = "";
+      $("btnJoin").disabled = false;
+      $("btnLeave").disabled = true;
+      $("btnMute").disabled = true;
+      $("btnCam").disabled = true;
+      $("btnCopyInvite").disabled = true;
+      $("btnAddPeer").disabled = true;
+      $("btnMute").textContent = "Mute mic";
+      $("btnCam").textContent = "Stop camera";
+      setStatus("Idle");
+      refreshParticipantList();
+      log("Left conference");
+    }
+
+    // ── Controls ──────────────────────────────────────────────────────────
+    $("btnJoin").addEventListener("click", join);
+    $("btnLeave").addEventListener("click", leave);
+
+    $("btnMute").addEventListener("click", () => {
+      if (!state.localStream) return;
+      state.micEnabled = !state.micEnabled;
+      state.localStream.getAudioTracks().forEach((t) => (t.enabled = state.micEnabled));
+      $("btnMute").textContent = state.micEnabled ? "Mute mic" : "Unmute mic";
+      log(state.micEnabled ? "Mic on" : "Mic muted");
+    });
+
+    $("btnCam").addEventListener("click", () => {
+      if (!state.localStream) return;
+      state.camEnabled = !state.camEnabled;
+      state.localStream.getVideoTracks().forEach((t) => (t.enabled = state.camEnabled));
+      $("btnCam").textContent = state.camEnabled ? "Stop camera" : "Start camera";
+      log(state.camEnabled ? "Camera on" : "Camera off");
+    });
+
+    $("btnCopyInvite").addEventListener("click", async () => {
+      const text = $("myInvite").value;
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        log("Invite copied to clipboard");
+      } catch {
+        $("myInvite").select();
+        document.execCommand("copy");
+        log("Invite selected — press Ctrl/Cmd+C");
+      }
+    });
+
+    $("btnAddPeer").addEventListener("click", async () => {
+      const raw = $("peerInvite").value.trim();
+      if (!raw) return;
+      try {
+        const invite = JSON.parse(raw);
+        await subscribePeer(invite);
+        $("peerInvite").value = "";
+      } catch (err) {
+        log(`Add peer failed: ${err.message || err}`);
+        alert(err.message || String(err));
+      }
+    });
+
+    // Allow Enter in room field to join
+    $("roomId").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") join();
+    });
+
+    log("Ready — enter a room ID and join");
+  </script>
+</body>
+</html>
